@@ -2,7 +2,7 @@
 
 Aplicativo **Android nativo de gestão de finanças pessoais** desenvolvido com Kotlin e Jetpack Compose.
 
-> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação no dispositivo e os testes no emulador ainda precisam ser validados.
+> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação em dispositivo Android real e a conferência visual das três abas foram realizadas com lançamentos de demonstração em 21/11/2026. Os testes instrumentados de interface ainda estão pendentes.
 
 ## Funcionalidades
 
@@ -51,7 +51,7 @@ A última compilação validada é a [Android CI #3](https://github.com/earaujor
 
 ## Capturas de tela
 
-Pendentes: serão adicionadas após validação no emulador, usando apenas dados fictícios.
+Capturas reais do aplicativo em execução, com lançamentos fictícios, já foram realizadas. A inclusão dos arquivos de imagem neste repositório ainda está pendente.
 
 ## Privacidade
 

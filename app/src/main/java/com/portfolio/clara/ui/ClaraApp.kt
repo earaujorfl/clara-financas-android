@@ -1,6 +1,9 @@
 package com.portfolio.clara.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -40,6 +43,8 @@ private val mint = Color(0xFFA4E0BE)
 private val coral = Color(0xFFFFAD9B)
 private val palette = darkColorScheme(
     primary = mint, secondary = coral,
+    primaryContainer = Color(0xFF2D493E), onPrimaryContainer = mint,
+    secondaryContainer = Color(0xFF334A40), onSecondaryContainer = mint,
     background = darkBackground, surface = darkBackground,
     surfaceContainer = darkCard, onSurface = Color(0xFFF2F8F3),
     onPrimary = Color(0xFF10221B)
@@ -79,7 +84,11 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { showAddDialog = true }) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = mint,
+                    contentColor = darkBackground
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Adicionar lançamento")
                 }
             },
@@ -138,8 +147,13 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                             }
                             Text("Últimos lançamentos", fontWeight = FontWeight.Bold)
                             if (entries.isEmpty()) Text("Nenhum lançamento neste mês.")
-                            entries.take(5).forEach { EntryCard(it, onDelete = null) }
-                            Spacer(Modifier.height(80.dp))
+                            entries.take(3).forEach { EntryCard(it, onDelete = null) }
+                            if (entries.size > 3) {
+                                TextButton(onClick = { selectedTab = 1 }) {
+                                    Text("Ver todos os lançamentos")
+                                }
+                            }
+                            Spacer(Modifier.height(96.dp))
                         }
                     }
                     1 -> {
@@ -170,11 +184,15 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                             if (groups.isEmpty()) Text("Registre despesas para ver a análise.")
                             groups.forEach { (category, amount) ->
                                 Text(category + " • " + Money.format(amount))
-                                LinearProgressIndicator(
-                                    progress = { amount.toFloat() / summary.expenseCents.coerceAtLeast(1L) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = mint
-                                )
+                                val fraction = (amount.toFloat() / summary.expenseCents.coerceAtLeast(1L))
+                                    .coerceIn(0f, 1f)
+                                Box(
+                                    Modifier.fillMaxWidth().height(8.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(Color(0xFF30443A))
+                                ) {
+                                    Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().background(mint))
+                                }
                             }
                         }
                     }
