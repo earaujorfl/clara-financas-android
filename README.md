@@ -2,7 +2,7 @@
 
 Aplicativo **Android nativo de gestão de finanças pessoais** desenvolvido com Kotlin e Jetpack Compose.
 
-> **Status:** MVP inicial / código-fonte em evolução. A compilação Android e a execução no emulador ainda precisam ser validadas. Não há APK testado neste repositório.
+> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação no dispositivo e os testes no emulador ainda precisam ser validados.
 
 ## Funcionalidades
 
@@ -44,6 +44,10 @@ app/src/main/java/com/portfolio/clara/
 ```
 
 Consulte [Arquitetura](docs/ARQUITETURA.md) e [Roadmap](docs/ROADMAP.md).
+
+## Build de teste
+
+A última compilação validada é a [Android CI #3](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427). Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
 
 ## Capturas de tela
 

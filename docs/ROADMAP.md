@@ -8,7 +8,8 @@
 - [x] Gastos por categoria
 - [x] Room offline
 - [x] Testes unitários e configuração de CI
-- [ ] Validar build em Android Studio e GitHub Actions
+- [x] Validar compilação e testes unitários no GitHub Actions
+- [ ] Validar execução no Android Studio/emulador
 - [ ] Adicionar capturas de tela reais
 
 ## v0.2 — Gestão diária
