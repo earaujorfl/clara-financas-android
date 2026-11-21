@@ -20,6 +20,10 @@ object Money {
         }
     }
 
+    /** Editable BRL amount, e.g. 1234,50 (without currency symbol). */
+    fun editable(cents: Long): String =
+        BigDecimal.valueOf(cents, 2).toPlainString().replace('.', ',')
+
     fun format(cents: Long): String =
         NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
             .format(BigDecimal.valueOf(cents, 2))

@@ -8,7 +8,8 @@ Aplicativo **Android nativo de gestão de finanças pessoais** desenvolvido com 
 
 - 💰 Cadastro de **receitas e despesas** em reais (BRL).
 - 📊 Saldo mensal, resumo financeiro e gastos por categoria.
-- 🧾 Listagem de lançamentos e exclusão com confirmação.
+- 🧾 Listagem, edição e exclusão de lançamentos com confirmação.
+- 📅 Escolha da data de receitas e despesas, com atualização automática do mês exibido.
 - 🗓 Navegação entre meses.
 - 🔒 Dados armazenados localmente com **Room**, sem login ou conexão com servidor.
 - ✅ Cálculos com valores inteiros em **centavos (Long)**, sem erros típicos de ponto flutuante.
@@ -45,9 +46,13 @@ app/src/main/java/com/portfolio/clara/
 
 Consulte [Arquitetura](docs/ARQUITETURA.md) e [Roadmap](docs/ROADMAP.md).
 
+## Cadastro e edição
+
+Na aba **Lançamentos**, toque no ícone de lápis para editar descrição, valor, tipo, categoria ou data. Para adicionar um novo lançamento, toque em **+** e escolha a data pelo calendário. Se o lançamento mudar de mês, a tela passa a mostrar o mês de destino. A edição mantém o identificador original no banco Room, sem recriar o registro e sem exigir migração do schema.
+
 ## Build de teste
 
-A versão com os ajustes de interface foi compilada e testada na [Android CI #5](https://github.com/earaujorfl/clara-financas-android/actions/runs/44959168817). Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
+A versão anterior, com os ajustes de interface, foi compilada e testada na [Android CI #5](https://github.com/earaujorfl/clara-financas-android/actions/runs/44959168817). A versão **0.2.0**, com edição e datas, deve ter seu build validado no GitHub Actions antes do uso no celular. Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
 
 ## Capturas de tela
 
@@ -72,7 +77,7 @@ O MVP não requer permissão de internet, desativa backup automático e mantém 
 
 ## Próximos passos
 
-Melhorias planejadas: edição de lançamentos, categorias personalizadas, limites de gastos, exportação CSV, testes de UI e screenshots reais.
+Melhorias planejadas: categorias personalizadas, pesquisa e filtros, limites de gastos, exportação CSV e testes instrumentados de UI.
 
 ## Licença
 

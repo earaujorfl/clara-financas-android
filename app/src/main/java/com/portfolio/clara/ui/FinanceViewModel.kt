@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.portfolio.clara.data.FinanceRepository
 import com.portfolio.clara.data.TransactionEntity
+import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,8 +19,19 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
         initialValue = emptyList()
     )
 
-    fun add(description: String, cents: Long, type: String, category: String) {
-        viewModelScope.launch { repository.add(description, cents, type, category) }
+    fun add(description: String, cents: Long, type: String, category: String, date: LocalDate) {
+        viewModelScope.launch { repository.add(description, cents, type, category, date) }
+    }
+
+    fun update(
+        entry: TransactionEntity,
+        description: String,
+        cents: Long,
+        type: String,
+        category: String,
+        date: LocalDate
+    ) {
+        viewModelScope.launch { repository.update(entry, description, cents, type, category, date) }
     }
 
     fun delete(entry: TransactionEntity) {

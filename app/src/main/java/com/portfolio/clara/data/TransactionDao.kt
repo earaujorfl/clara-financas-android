@@ -3,6 +3,7 @@ package com.portfolio.clara.data
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.Update
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
@@ -13,6 +14,9 @@ interface TransactionDao {
 
     @Insert
     suspend fun insert(transaction: TransactionEntity)
+
+    @Update
+    suspend fun update(transaction: TransactionEntity)
 
     @Delete
     suspend fun delete(transaction: TransactionEntity)

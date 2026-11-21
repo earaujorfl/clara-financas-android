@@ -14,8 +14,9 @@
 - [x] Adicionar capturas de tela reais
 
 ## v0.2 — Gestão diária
-- [ ] Editar lançamentos
-- [ ] Data personalizada e categorias editáveis
+- [x] Editar lançamentos
+- [x] Escolher a data ao cadastrar ou editar
+- [ ] Categorias editáveis
 - [ ] Pesquisa e filtros
 - [ ] Testes instrumentados de Compose
 

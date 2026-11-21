@@ -12,6 +12,12 @@ class MoneyTest {
         assertEquals(1L, Money.parseCents("0,01"))
     }
 
+    @Test fun editAmountRoundTripsWithoutPrecisionLoss() {
+        val cents = 123_456L
+        assertEquals("1234,56", Money.editable(cents))
+        assertEquals(cents, Money.parseCents(Money.editable(cents)))
+    }
+
     @Test fun rejectsInvalidOrNonpositiveMoney() {
         assertNull(Money.parseCents(""))
         assertNull(Money.parseCents("10,999"))

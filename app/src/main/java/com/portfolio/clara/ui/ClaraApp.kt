@@ -13,6 +13,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DateRange
+import android.app.DatePickerDialog
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.BarChart
@@ -31,9 +35,9 @@ import com.portfolio.clara.data.TransactionEntity
 import com.portfolio.clara.data.TransactionType
 import com.portfolio.clara.domain.FinanceCalculator
 import com.portfolio.clara.domain.Money
-import java.time.Instant
+import java.time.LocalDate
+import com.portfolio.clara.domain.TransactionDates
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -57,14 +61,12 @@ fun ClaraApp(viewModel: FinanceViewModel) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var monthKey by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     var deleting by remember { mutableStateOf<TransactionEntity?>(null) }
     val month = YearMonth.parse(monthKey)
     val entries = remember(transactions, monthKey) {
         transactions.filter {
-            YearMonth.from(
-                Instant.ofEpochMilli(it.timestampMillis)
-                    .atZone(ZoneId.systemDefault()).toLocalDate()
-            ) == month
+            YearMonth.from(TransactionDates.localDate(it.timestampMillis)) == month
         }
     }
     val summary = remember(entries) { FinanceCalculator.summarize(entries) }
@@ -147,7 +149,7 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                             }
                             Text("Últimos lançamentos", fontWeight = FontWeight.Bold)
                             if (entries.isEmpty()) Text("Nenhum lançamento neste mês.")
-                            entries.take(3).forEach { EntryCard(it, onDelete = null) }
+                            entries.take(3).forEach { EntryCard(it) }
                             if (entries.size > 3) {
                                 TextButton(onClick = { selectedTab = 1 }) {
                                     Text("Ver todos os lançamentos")
@@ -167,7 +169,11 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(entries, key = { it.id }) { entry ->
-                                    EntryCard(entry) { deleting = it }
+                                    EntryCard(
+                                        entry,
+                                        onEdit = { editing = it },
+                                        onDelete = { deleting = it }
+                                    )
                                 }
                             }
                         }
@@ -200,12 +206,27 @@ fun ClaraApp(viewModel: FinanceViewModel) {
             }
         }
         if (showAddDialog) {
-            AddTransactionDialog(
+            val suggestedDate = if (month == YearMonth.now()) LocalDate.now() else month.atDay(1)
+            TransactionEditorDialog(
+                initialEntry = null,
+                defaultDate = suggestedDate,
                 onDismiss = { showAddDialog = false },
-                onAdd = { description, cents, type, category ->
-                    viewModel.add(description, cents, type, category)
-                    monthKey = YearMonth.now().toString()
+                onSave = { description, cents, type, category, date ->
+                    viewModel.add(description, cents, type, category, date)
+                    monthKey = YearMonth.from(date).toString()
                     showAddDialog = false
+                }
+            )
+        }
+        editing?.let { entry ->
+            TransactionEditorDialog(
+                initialEntry = entry,
+                defaultDate = TransactionDates.localDate(entry.timestampMillis),
+                onDismiss = { editing = null },
+                onSave = { description, cents, type, category, date ->
+                    viewModel.update(entry, description, cents, type, category, date)
+                    monthKey = YearMonth.from(date).toString()
+                    editing = null
                 }
             )
         }
@@ -244,10 +265,10 @@ private fun SummaryCard(label: String, cents: Long, accent: Color) {
 @Composable
 private fun EntryCard(
     entry: TransactionEntity,
-    onDelete: ((TransactionEntity) -> Unit)?
+    onEdit: ((TransactionEntity) -> Unit)? = null,
+    onDelete: ((TransactionEntity) -> Unit)? = null
 ) {
-    val date = Instant.ofEpochMilli(entry.timestampMillis)
-        .atZone(ZoneId.systemDefault()).toLocalDate()
+    val date = TransactionDates.localDate(entry.timestampMillis)
         .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     Card(
         colors = CardDefaults.cardColors(containerColor = darkCard),
@@ -266,6 +287,11 @@ private fun EntryCard(
                 sign + Money.format(entry.amountCents),
                 color = if (entry.type == TransactionType.INCOME) mint else coral
             )
+            if (onEdit != null) {
+                IconButton(onClick = { onEdit(entry) }) {
+                    Icon(Icons.Default.Edit, "Editar ${entry.description}")
+                }
+            }
             if (onDelete != null) {
                 IconButton(onClick = { onDelete(entry) }) {
                     Icon(Icons.Default.Delete, "Excluir lançamento")
@@ -276,14 +302,28 @@ private fun EntryCard(
 }
 
 @Composable
-private fun AddTransactionDialog(
+private fun TransactionEditorDialog(
+    initialEntry: TransactionEntity?,
+    defaultDate: LocalDate,
     onDismiss: () -> Unit,
-    onAdd: (String, Long, String, String) -> Unit
+    onSave: (String, Long, String, String, LocalDate) -> Unit
 ) {
-    var description by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(TransactionType.EXPENSE) }
-    var category by remember { mutableStateOf("Alimentação") }
+    var description by remember(initialEntry?.id) {
+        mutableStateOf(initialEntry?.description.orEmpty())
+    }
+    var amount by remember(initialEntry?.id) {
+        mutableStateOf(initialEntry?.let { Money.editable(it.amountCents) }.orEmpty())
+    }
+    var type by remember(initialEntry?.id) {
+        mutableStateOf(initialEntry?.type ?: TransactionType.EXPENSE)
+    }
+    var category by remember(initialEntry?.id) {
+        mutableStateOf(initialEntry?.category ?: "Alimentação")
+    }
+    var selectedDate by remember(initialEntry?.id, defaultDate) {
+        mutableStateOf(defaultDate)
+    }
+    val context = LocalContext.current
     val categories = if (type == TransactionType.EXPENSE)
         listOf("Alimentação", "Moradia", "Transporte", "Saúde", "Lazer", "Outros")
     else listOf("Salário", "Freelance", "Investimentos", "Outros")
@@ -291,9 +331,12 @@ private fun AddTransactionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Novo lançamento") },
+        title = { Text(if (initialEntry == null) "Novo lançamento" else "Editar lançamento") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedTextField(
                     value = description, onValueChange = { description = it },
                     label = { Text("Descrição") }, singleLine = true
@@ -332,15 +375,31 @@ private fun AddTransactionDialog(
                         )
                     }
                 }
+                Text("Data do lançamento")
+                OutlinedButton(onClick = {
+                    DatePickerDialog(
+                        context,
+                        { _, year, monthOfYear, dayOfMonth ->
+                            selectedDate = LocalDate.of(year, monthOfYear + 1, dayOfMonth)
+                        },
+                        selectedDate.year,
+                        selectedDate.monthValue - 1,
+                        selectedDate.dayOfMonth
+                    ).show()
+                }) {
+                    Icon(Icons.Default.DateRange, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                }
             }
         },
         confirmButton = {
             TextButton(
-                enabled = description.isNotBlank() && cents != null,
+                enabled = description.isNotBlank() && cents != null && category.isNotBlank(),
                 onClick = {
-                    if (cents != null) onAdd(description, cents, type, category)
+                    if (cents != null) onSave(description, cents, type, category, selectedDate)
                 }
-            ) { Text("Salvar") }
+            ) { Text(if (initialEntry == null) "Salvar" else "Salvar alterações") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
