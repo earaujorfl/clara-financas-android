@@ -2,7 +2,7 @@
 
 Aplicativo **Android nativo de gestão de finanças pessoais** desenvolvido com Kotlin e Jetpack Compose.
 
-> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação em dispositivo Android real e a conferência visual das três abas foram realizadas com lançamentos de demonstração em 21/11/2026. Os testes instrumentados de interface ainda estão pendentes.
+> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44959168817) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação em dispositivo Android real e a conferência visual das três abas foram realizadas com lançamentos de demonstração em 21/11/2026. Os testes instrumentados de interface ainda estão pendentes.
 
 ## Funcionalidades
 
@@ -47,11 +47,24 @@ Consulte [Arquitetura](docs/ARQUITETURA.md) e [Roadmap](docs/ROADMAP.md).
 
 ## Build de teste
 
-A última compilação validada é a [Android CI #3](https://github.com/earaujorfl/clara-financas-android/actions/runs/44957435427). Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
+A versão com os ajustes de interface foi compilada e testada na [Android CI #5](https://github.com/earaujorfl/clara-financas-android/actions/runs/44959168817). Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
 
 ## Capturas de tela
 
-Capturas reais do aplicativo em execução, com lançamentos fictícios, já foram realizadas. A inclusão dos arquivos de imagem neste repositório ainda está pendente.
+Imagens reais do Clara Finanças em um dispositivo Android, registradas com **dados fictícios** em novembro de 2026.
+
+<table>
+  <thead><tr><th>Início</th><th>Lançamentos</th><th>Análise</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><img src="docs/screenshots/inicio.webp" alt="Tela inicial com saldo mensal e lançamentos recentes" width="240"></td>
+      <td><img src="docs/screenshots/lancamentos.webp" alt="Lista de receitas e despesas cadastradas" width="240"></td>
+      <td><img src="docs/screenshots/analise.webp" alt="Resumo de despesas por categoria" width="240"></td>
+    </tr>
+  </tbody>
+</table>
+
+> O aplicativo foi instalado e inspecionado em dispositivo Android real. A validação automatizada de interface ainda está planejada.
 
 ## Privacidade
 

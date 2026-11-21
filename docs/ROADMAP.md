@@ -11,7 +11,7 @@
 - [x] Validar compilação e testes unitários no GitHub Actions
 - [x] Executar o APK em um dispositivo Android real e conferir as três telas
 - [ ] Validar testes de UI em emulador/Android Studio
-- [ ] Adicionar capturas de tela reais
+- [x] Adicionar capturas de tela reais
 
 ## v0.2 — Gestão diária
 - [ ] Editar lançamentos
