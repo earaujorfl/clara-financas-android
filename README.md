@@ -2,7 +2,7 @@
 
 Aplicativo **Android nativo de gestão de finanças pessoais** desenvolvido com Kotlin e Jetpack Compose.
 
-> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44962151509) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação em dispositivo Android real e a conferência visual das três abas foram realizadas com lançamentos de demonstração em 21/11/2026. Os testes instrumentados de interface ainda estão pendentes.
+> **Status:** MVP inicial em evolução. Compilação Android e testes unitários aprovados no [GitHub Actions](https://github.com/earaujorfl/clara-financas-android/actions/runs/44965648134) em 21/11/2026. O APK de depuração está disponível como artefato dessa execução; a instalação em dispositivo Android real e a conferência visual das três abas foram realizadas com lançamentos de demonstração em 21/11/2026. Os testes instrumentados de interface ainda estão pendentes.
 
 ## Funcionalidades
 
@@ -61,7 +61,7 @@ Na aba **Lançamentos**, toque no ícone de lápis para editar descrição, valo
 
 ## Build de teste
 
-A versão **0.2.0** teve compilação e testes unitários aprovados na [Android CI #7](https://github.com/earaujorfl/clara-financas-android/actions/runs/44962151509). A versão **0.3.0** com busca, filtros, categorias e migração de dados ainda precisa passar pela CI e ser testada manualmente. Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
+A versão **0.3.0** teve compilação e testes unitários aprovados na [Android CI #9](https://github.com/earaujorfl/clara-financas-android/actions/runs/44965648134). Os testes de interface e de migração **em um emulador com banco de dados v1** ainda estão pendentes. Abra a execução, localize **Artifacts** e baixe `clara-debug-apk`. Extraia o ZIP para obter o APK de depuração. É um build de desenvolvimento, não uma versão assinada de distribuição.
 
 **Atualização de versões de teste:** APKs de debug de execuções diferentes podem usar assinaturas diferentes. Se o Android impedir a atualização, será necessário remover a versão anterior antes de instalar esta. **Desinstalar apaga o banco local do aplicativo** — use apenas dados fictícios até existir um mecanismo de backup.
 
