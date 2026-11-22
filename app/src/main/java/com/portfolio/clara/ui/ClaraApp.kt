@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -15,6 +16,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import android.app.DatePickerDialog
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Home
@@ -31,8 +34,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.portfolio.clara.data.CustomCategoryEntity
 import com.portfolio.clara.data.TransactionEntity
 import com.portfolio.clara.data.TransactionType
+import com.portfolio.clara.domain.CategoryOptions
+import com.portfolio.clara.domain.TransactionFilters
 import com.portfolio.clara.domain.FinanceCalculator
 import com.portfolio.clara.domain.Money
 import java.time.LocalDate
@@ -58,11 +64,15 @@ private val palette = darkColorScheme(
 @Composable
 fun ClaraApp(viewModel: FinanceViewModel) {
     val transactions by viewModel.transactions.collectAsStateWithLifecycle()
+    val customCategories by viewModel.customCategories.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var monthKey by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     var deleting by remember { mutableStateOf<TransactionEntity?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var typeFilter by rememberSaveable { mutableStateOf(TransactionFilters.ALL) }
+    var categoryFilter by rememberSaveable { mutableStateOf<String?>(null) }
     val month = YearMonth.parse(monthKey)
     val entries = remember(transactions, monthKey) {
         transactions.filter {
@@ -70,6 +80,9 @@ fun ClaraApp(viewModel: FinanceViewModel) {
         }
     }
     val summary = remember(entries) { FinanceCalculator.summarize(entries) }
+    val visibleHistory = remember(entries, searchQuery, typeFilter, categoryFilter) {
+        TransactionFilters.apply(entries, searchQuery, typeFilter, categoryFilter)
+    }
 
     MaterialTheme(colorScheme = palette) {
         Scaffold(
@@ -159,21 +172,118 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                         }
                     }
                     1 -> {
-                        if (entries.isEmpty()) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Nenhum lançamento neste mês.")
-                            }
-                        } else {
-                            LazyColumn(
-                                contentPadding = PaddingValues(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                        Column(Modifier.fillMaxSize()) {
+                            Column(
+                                Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(entries, key = { it.id }) { entry ->
-                                    EntryCard(
-                                        entry,
-                                        onEdit = { editing = it },
-                                        onDelete = { deleting = it }
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = { Text("Buscar lançamento") },
+                                    singleLine = true,
+                                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                                        {
+                                            IconButton(onClick = { searchQuery = "" }) {
+                                                Icon(Icons.Default.Close, "Limpar busca")
+                                            }
+                                        }
+                                    } else null
+                                )
+                                Row(
+                                    Modifier.horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    listOf(
+                                        TransactionFilters.ALL to "Todos",
+                                        TransactionType.INCOME to "Receitas",
+                                        TransactionType.EXPENSE to "Despesas"
+                                    ).forEach { (value, label) ->
+                                        FilterChip(
+                                            selected = typeFilter == value,
+                                            onClick = {
+                                                typeFilter = value
+                                                categoryFilter = null
+                                            },
+                                            label = { Text(label) }
+                                        )
+                                    }
+                                }
+                                val categoriesInMonth = entries
+                                    .filter { typeFilter == TransactionFilters.ALL || it.type == typeFilter }
+                                    .map { it.category }
+                                    .distinct()
+                                    .sorted()
+                                var categoryMenuOpen by remember { mutableStateOf(false) }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box {
+                                        OutlinedButton(onClick = { categoryMenuOpen = true }) {
+                                            Text(categoryFilter ?: "Todas as categorias")
+                                        }
+                                        DropdownMenu(
+                                            expanded = categoryMenuOpen,
+                                            onDismissRequest = { categoryMenuOpen = false }
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("Todas as categorias") },
+                                                onClick = {
+                                                    categoryFilter = null
+                                                    categoryMenuOpen = false
+                                                }
+                                            )
+                                            categoriesInMonth.forEach { option ->
+                                                DropdownMenuItem(
+                                                    text = { Text(option) },
+                                                    onClick = {
+                                                        categoryFilter = option
+                                                        categoryMenuOpen = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        "${visibleHistory.size} encontrados",
+                                        style = MaterialTheme.typography.labelMedium
                                     )
+                                }
+                            }
+                            if (visibleHistory.isEmpty()) {
+                                Column(
+                                    Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        if (entries.isEmpty()) "Nenhum lançamento neste mês."
+                                        else "Nenhum lançamento encontrado."
+                                    )
+                                    if (entries.isNotEmpty()) {
+                                        TextButton(onClick = {
+                                            searchQuery = ""
+                                            typeFilter = TransactionFilters.ALL
+                                            categoryFilter = null
+                                        }) { Text("Limpar filtros") }
+                                    }
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(
+                                        start = 20.dp, end = 20.dp, top = 8.dp, bottom = 108.dp
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(visibleHistory, key = { it.id }) { entry ->
+                                        EntryCard(
+                                            entry,
+                                            onEdit = { editing = it },
+                                            onDelete = { deleting = it }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -210,6 +320,8 @@ fun ClaraApp(viewModel: FinanceViewModel) {
             TransactionEditorDialog(
                 initialEntry = null,
                 defaultDate = suggestedDate,
+                customCategories = customCategories,
+                onCreateCategory = { type, name -> viewModel.createCategory(type, name) },
                 onDismiss = { showAddDialog = false },
                 onSave = { description, cents, type, category, date ->
                     viewModel.add(description, cents, type, category, date)
@@ -222,6 +334,8 @@ fun ClaraApp(viewModel: FinanceViewModel) {
             TransactionEditorDialog(
                 initialEntry = entry,
                 defaultDate = TransactionDates.localDate(entry.timestampMillis),
+                customCategories = customCategories,
+                onCreateCategory = { type, name -> viewModel.createCategory(type, name) },
                 onDismiss = { editing = null },
                 onSave = { description, cents, type, category, date ->
                     viewModel.update(entry, description, cents, type, category, date)
@@ -283,18 +397,24 @@ private fun EntryCard(
                 Text(entry.category + " • " + date, style = MaterialTheme.typography.labelSmall)
             }
             val sign = if (entry.type == TransactionType.INCOME) "+ " else "− "
-            Text(
-                sign + Money.format(entry.amountCents),
-                color = if (entry.type == TransactionType.INCOME) mint else coral
-            )
-            if (onEdit != null) {
-                IconButton(onClick = { onEdit(entry) }) {
-                    Icon(Icons.Default.Edit, "Editar ${entry.description}")
-                }
-            }
-            if (onDelete != null) {
-                IconButton(onClick = { onDelete(entry) }) {
-                    Icon(Icons.Default.Delete, "Excluir lançamento")
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    sign + Money.format(entry.amountCents),
+                    color = if (entry.type == TransactionType.INCOME) mint else coral
+                )
+                if (onEdit != null || onDelete != null) {
+                    Row {
+                        if (onEdit != null) {
+                            IconButton(onClick = { onEdit(entry) }, modifier = Modifier.size(40.dp)) {
+                                Icon(Icons.Default.Edit, "Editar ${entry.description}")
+                            }
+                        }
+                        if (onDelete != null) {
+                            IconButton(onClick = { onDelete(entry) }, modifier = Modifier.size(40.dp)) {
+                                Icon(Icons.Default.Delete, "Excluir lançamento")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -305,6 +425,8 @@ private fun EntryCard(
 private fun TransactionEditorDialog(
     initialEntry: TransactionEntity?,
     defaultDate: LocalDate,
+    customCategories: List<CustomCategoryEntity>,
+    onCreateCategory: (String, String) -> Unit,
     onDismiss: () -> Unit,
     onSave: (String, Long, String, String, LocalDate) -> Unit
 ) {
@@ -323,10 +445,17 @@ private fun TransactionEditorDialog(
     var selectedDate by remember(initialEntry?.id, defaultDate) {
         mutableStateOf(defaultDate)
     }
+    var creatingCategory by remember(initialEntry?.id) { mutableStateOf(false) }
+    var newCategoryName by remember(initialEntry?.id) { mutableStateOf("") }
     val context = LocalContext.current
-    val categories = if (type == TransactionType.EXPENSE)
-        listOf("Alimentação", "Moradia", "Transporte", "Saúde", "Lazer", "Outros")
-    else listOf("Salário", "Freelance", "Investimentos", "Outros")
+    val categories = (
+        CategoryOptions.builtIn(type) +
+            customCategories.filter { it.type == type }.map { it.name } +
+            category
+    ).distinct()
+    val newCategory = newCategoryName.trim().replace(Regex("\\s+"), " ")
+    val canCreateCategory = newCategory.isNotBlank() && newCategory.length <= 40 &&
+        categories.none { it.equals(newCategory, ignoreCase = true) }
     val cents = Money.parseCents(amount)
 
     AlertDialog(
@@ -373,6 +502,43 @@ private fun TransactionEditorDialog(
                             onClick = { category = option },
                             label = { Text(option) }
                         )
+                    }
+                }
+                if (creatingCategory) {
+                    OutlinedTextField(
+                        value = newCategoryName,
+                        onValueChange = { newCategoryName = it },
+                        label = { Text("Nome da nova categoria") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (newCategoryName.isNotBlank() && !canCreateCategory) {
+                        Text(
+                            "Use um nome diferente, com até 40 caracteres.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = coral
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            creatingCategory = false
+                            newCategoryName = ""
+                        }) { Text("Cancelar") }
+                        Button(
+                            enabled = canCreateCategory,
+                            onClick = {
+                                onCreateCategory(type, newCategory)
+                                category = newCategory
+                                newCategoryName = ""
+                                creatingCategory = false
+                            }
+                        ) { Text("Criar categoria") }
+                    }
+                } else {
+                    TextButton(onClick = { creatingCategory = true }) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Nova categoria")
                     }
                 }
                 Text("Data do lançamento")

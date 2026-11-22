@@ -16,11 +16,17 @@
 ## v0.2 — Gestão diária
 - [x] Editar lançamentos
 - [x] Escolher a data ao cadastrar ou editar
-- [ ] Categorias editáveis
-- [ ] Pesquisa e filtros
 - [ ] Testes instrumentados de Compose
 
-## v0.3 — Planejamento
+## v0.3 — Busca, filtros e categorias
+- [x] Buscar lançamentos por descrição ou categoria, ignorando acentos
+- [x] Filtrar histórico por receitas, despesas e categoria
+- [x] Criar categorias personalizadas no formulário
+- [x] Migrar Room 1 → 2 sem apagar lançamentos
+- [ ] Testar migração em dispositivo/emulador com banco v1
+- [ ] Gerenciar renomeação/exclusão de categorias
+
+## v0.4 — Planejamento
 - [ ] Orçamento por categoria
 - [ ] Metas de economia
 - [ ] Lançamentos recorrentes
@@ -29,5 +35,6 @@
 ## v1.0 — Portfólio
 - [ ] Modos claro/escuro e acessibilidade
 - [ ] Screenshots e vídeo
-- [ ] Migrações Room
+- [x] Migração Room 1 → 2 documentada
+- [ ] Testes automáticos de migração
 - [ ] Release assinado
