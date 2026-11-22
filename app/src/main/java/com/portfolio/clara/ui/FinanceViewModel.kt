@@ -19,6 +19,16 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
         initialValue = emptyList()
     )
 
+    val customCategories = repository.customCategories.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    fun createCategory(type: String, name: String) {
+        viewModelScope.launch { repository.createCategory(type, name) }
+    }
+
     fun add(description: String, cents: Long, type: String, category: String, date: LocalDate) {
         viewModelScope.launch { repository.add(description, cents, type, category, date) }
     }

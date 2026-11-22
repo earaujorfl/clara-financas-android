@@ -1,11 +1,24 @@
 package com.portfolio.clara.data
 
+import com.portfolio.clara.domain.CategoryOptions
 import com.portfolio.clara.domain.TransactionDates
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
-class FinanceRepository(private val dao: TransactionDao) {
+class FinanceRepository(
+    private val dao: TransactionDao,
+    private val categoryDao: CategoryDao
+) {
     val transactions: Flow<List<TransactionEntity>> = dao.observeAll()
+    val customCategories: Flow<List<CustomCategoryEntity>> = categoryDao.observeAll()
+
+    suspend fun createCategory(type: String, name: String): Boolean {
+        val normalized = name.trim().replace(Regex("\\s+"), " ")
+        if (normalized.isEmpty() || normalized.length > 40 || CategoryOptions.builtIn(type).isEmpty()) return false
+        if (CategoryOptions.builtIn(type).any { it.equals(normalized, ignoreCase = true) }) return false
+        if (categoryDao.countSameName(type, normalized) > 0) return false
+        return categoryDao.insert(CustomCategoryEntity(type = type, name = normalized)) != -1L
+    }
 
     suspend fun add(
         description: String,

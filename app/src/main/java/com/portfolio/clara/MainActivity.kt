@@ -13,9 +13,11 @@ import com.portfolio.clara.ui.FinanceViewModel
 
 class MainActivity : ComponentActivity() {
     private val database by lazy {
-        Room.databaseBuilder(applicationContext, FinanceDatabase::class.java, "clara-finances.db").build()
+        Room.databaseBuilder(applicationContext, FinanceDatabase::class.java, "clara-finances.db")
+            .addMigrations(FinanceDatabase.MIGRATION_1_2)
+            .build()
     }
-    private val repository by lazy { FinanceRepository(database.transactionDao()) }
+    private val repository by lazy { FinanceRepository(database.transactionDao(), database.categoryDao()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

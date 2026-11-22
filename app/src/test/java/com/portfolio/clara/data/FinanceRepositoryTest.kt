@@ -13,7 +13,7 @@ import org.junit.Test
 class FinanceRepositoryTest {
     @Test fun addAndEditKeepTheIdAndMoveTransactionToNewMonth() = runBlocking {
         val dao = FakeDao()
-        val repository = FinanceRepository(dao)
+        val repository = FinanceRepository(dao, FakeCategoryDao())
         val october = LocalDate.of(2026, 10, 20)
         val november = LocalDate.of(2026, 11, 5)
         repository.add("  Mercado ", 5000, TransactionType.EXPENSE, "Alimentação", october)
@@ -32,7 +32,7 @@ class FinanceRepositoryTest {
 
     @Test fun invalidUpdateDoesNotOverwriteSavedTransaction() = runBlocking {
         val dao = FakeDao()
-        val repository = FinanceRepository(dao)
+        val repository = FinanceRepository(dao, FakeCategoryDao())
         repository.add("Salário", 1000, TransactionType.INCOME, "Salário", LocalDate.of(2026, 11, 10))
         val entry = repository.transactions.first().single()
         try {
@@ -42,6 +42,30 @@ class FinanceRepositoryTest {
             // Validation prevents an accidental overwrite.
         }
         assertEquals(entry, repository.transactions.first().single())
+    }
+
+    @Test fun userCategoriesAreSavedAndDuplicatesRejected() = runBlocking {
+        val categories = FakeCategoryDao()
+        val repository = FinanceRepository(FakeDao(), categories)
+        assertTrue(repository.createCategory(TransactionType.EXPENSE, "  Pets  "))
+        assertEquals("Pets", repository.customCategories.first().single().name)
+        assertEquals(false, repository.createCategory(TransactionType.EXPENSE, "pets"))
+        assertEquals(false, repository.createCategory(TransactionType.EXPENSE, "Moradia"))
+        assertTrue(repository.createCategory(TransactionType.INCOME, "Pets"))
+        assertEquals(2, repository.customCategories.first().size)
+    }
+
+    private class FakeCategoryDao : CategoryDao {
+        private val data = MutableStateFlow<List<CustomCategoryEntity>>(emptyList())
+        override fun observeAll(): Flow<List<CustomCategoryEntity>> = data
+        override suspend fun countSameName(type: String, name: String): Int =
+            data.value.count { it.type == type && it.name.equals(name, ignoreCase = true) }
+        override suspend fun insert(category: CustomCategoryEntity): Long {
+            if (countSameName(category.type, category.name) > 0) return -1L
+            val id = (data.value.maxOfOrNull { it.id } ?: 0L) + 1
+            data.value = data.value + category.copy(id = id)
+            return id
+        }
     }
 
     private class FakeDao : TransactionDao {
