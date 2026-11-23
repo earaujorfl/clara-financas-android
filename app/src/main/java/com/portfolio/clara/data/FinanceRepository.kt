@@ -4,13 +4,50 @@ import com.portfolio.clara.domain.CategoryOptions
 import com.portfolio.clara.domain.TransactionDates
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import java.time.YearMonth
 
 class FinanceRepository(
     private val dao: TransactionDao,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val budgetDao: BudgetDao
 ) {
+
     val transactions: Flow<List<TransactionEntity>> = dao.observeAll()
     val customCategories: Flow<List<CustomCategoryEntity>> = categoryDao.observeAll()
+
+    fun budgetsForMonth(
+        month: YearMonth
+    ): Flow<List<BudgetEntity>> {
+        return budgetDao.observeByMonth(month.toString())
+    }
+
+    suspend fun saveBudget(
+        month: YearMonth,
+        category: String,
+        limitCents: Long
+    ) {
+        require(category.isNotBlank()) {
+            "A categoria é obrigatória"
+        }
+
+        require(limitCents > 0) {
+            "O limite deve ser maior que zero"
+        }
+
+        budgetDao.save(
+            BudgetEntity(
+                yearMonth = month.toString(),
+                category = category.trim(),
+                limitCents = limitCents
+            )
+        )
+    }
+
+    suspend fun deleteBudget(
+        budget: BudgetEntity
+    ) {
+        budgetDao.delete(budget)
+    }
 
     suspend fun createCategory(type: String, name: String): Boolean {
         val normalized = name.trim().replace(Regex("\\s+"), " ")

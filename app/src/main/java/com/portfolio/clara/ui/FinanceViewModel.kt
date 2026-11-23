@@ -12,6 +12,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import com.portfolio.clara.data.BudgetEntity
+import com.portfolio.clara.domain.BudgetCalculator
+import com.portfolio.clara.domain.BudgetProgress
+import java.time.YearMonth
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+
+
 class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() {
     val transactions = repository.transactions.stateIn(
         scope = viewModelScope,
@@ -46,6 +54,44 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
 
     fun delete(entry: TransactionEntity) {
         viewModelScope.launch { repository.delete(entry) }
+    }
+
+    fun observeBudgetProgress(
+        month: YearMonth
+    ): Flow<List<BudgetProgress>> {
+
+        return combine(
+            repository.budgetsForMonth(month),
+            repository.transactions
+        ) { budgets, transactions ->
+
+            budgets.map { budget ->
+                BudgetCalculator.calculate(
+                    budget = budget,
+                    transactions = transactions
+                )
+            }
+        }
+    }
+
+    fun saveBudget(
+        month: YearMonth,
+        category: String,
+        limitCents: Long
+    ) {
+        viewModelScope.launch {
+            repository.saveBudget(
+                month = month,
+                category = category,
+                limitCents = limitCents
+            )
+        }
+    }
+
+    fun deleteBudget(budget: BudgetEntity) {
+        viewModelScope.launch {
+            repository.deleteBudget(budget)
+        }
     }
 
     companion object {

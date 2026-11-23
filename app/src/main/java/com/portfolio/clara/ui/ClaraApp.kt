@@ -46,6 +46,7 @@ import com.portfolio.clara.domain.TransactionDates
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 
 private val darkBackground = Color(0xFF101A18)
 private val darkCard = Color(0xFF1C2A25)
@@ -99,12 +100,17 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showAddDialog = true },
-                    containerColor = mint,
-                    contentColor = darkBackground
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar lançamento")
+                if(selectedTab != 3) {
+                    FloatingActionButton(
+                        onClick = { showAddDialog = true },
+                        containerColor = mint,
+                        contentColor = darkBackground
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Adicionar lançamento"
+                        )
+                    }
                 }
             },
             bottomBar = {
@@ -124,6 +130,21 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                         icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
                         label = { Text("Análise") }
                     )
+
+                    NavigationBarItem(
+                        selected = selectedTab == 3,
+                        onClick = { selectedTab = 3 },
+                        icon = {
+                            Icon(
+                                Icons.Default.AccountBalanceWallet,
+                                contentDescription = null
+                            )
+                        },
+                        label = {
+                            Text("Orçamentos")
+                        }
+                    )
+
                 }
             }
         ) { padding ->
@@ -288,7 +309,7 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                             }
                         }
                     }
-                    else -> {
+                    2 -> {
                         val groups = remember(entries) {
                             FinanceCalculator.expensesByCategory(entries)
                         }
@@ -312,6 +333,14 @@ fun ClaraApp(viewModel: FinanceViewModel) {
                             }
                         }
                     }
+
+                    else -> {
+                        BudgetScreen(
+                            month = month,
+                            viewModel = viewModel
+                        )
+                    }
+
                 }
             }
         }
